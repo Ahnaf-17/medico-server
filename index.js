@@ -26,6 +26,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const campCollection = client.db('medicoDB').collection('camps');
+    const reviewCollection = client.db('medicoDB').collection('reviews');
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
@@ -36,6 +37,12 @@ async function run() {
       res.send(result)
     })
     
+
+    // reviews 
+    app.get('/reviews',async(req,res)=>{
+      const result = await reviewCollection.find().toArray();
+      res.send(result)
+    })
 
 
 

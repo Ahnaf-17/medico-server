@@ -52,16 +52,17 @@ async function run() {
         next();
       })
     }
-//  const verifyToken = (req,res,next) =>{
-//   console.log('inside verify token',req.headers);
-//   next()
-//   if(!req.headers.authorization){
-//     return res.status(401).send({message: 'unauthorized access'})
-//   }
-//   const token = req.headers.authorization.split(' ')[1];
-//   jwt.verify(token,process.env.ACCESS_TOKEN,())
-//  }
 
+    const verifyOrganizer = async (req,res,next)=>{
+      const email = req.decoded.email
+      const query = {email:email};
+      const user = await userCollection.findOne(query)
+      const isOrganizer = user?.role === 'organizer'
+      if(!isOrganizer){
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      next()
+    } 
 
 
     // jwt 
@@ -74,7 +75,7 @@ async function run() {
     })
 
     // camps 
-    app.get('/camps',verifyToken,async(req,res)=>{
+    app.get('/camps',async(req,res)=>{
       
       const result = await campCollection.find().toArray();
       res.send(result)
@@ -85,6 +86,8 @@ async function run() {
       const result = await campCollection.deleteOne(query)
       res.send(result)
     })
+
+    // app.get('/camps/')
 
     // reviews 
     app.get('/reviews',async(req,res)=>{
@@ -104,6 +107,26 @@ async function run() {
       }
       const result = await userCollection.insertOne(user);
       res.send(result)
+    })
+
+    app.get('/users',verifyToken,async(req,res)=>{
+      const result = await userCollection.find().toArray();
+      res.send(result)
+    })
+
+
+    app.get('/users/organizer/:email',verifyToken,async(req,res)=>{
+      const email = req.params.email;
+      if(email !== req.decoded.email){
+        return res.send({message: 'Unauthorized access'})
+      }
+      const query = {email:email}
+      const user = await userCollection.findOne(query)
+      let organizer = false;
+      if(user){
+        organizer = user?.role === 'organizer'
+      }
+      res.send({organizer})
     })
 
 

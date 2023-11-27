@@ -27,6 +27,7 @@ async function run() {
   try {
     const campCollection = client.db('medicoDB').collection('camps');
     const reviewCollection = client.db('medicoDB').collection('reviews');
+    const userCollection = client.db('medicoDB').collection('users');
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
@@ -41,6 +42,19 @@ async function run() {
     // reviews 
     app.get('/reviews',async(req,res)=>{
       const result = await reviewCollection.find().toArray();
+      res.send(result)
+    })
+
+
+    //users
+    app.post('/users',async(req,res)=>{
+      const user = req.body;
+      const query = {email: user.email}
+      const existUser = await userCollection.findOne(query);
+      if(existUser){
+        return res.send({message: 'user exist'})
+      }
+      const result = await userCollection.insertOne(user);
       res.send(result)
     })
 

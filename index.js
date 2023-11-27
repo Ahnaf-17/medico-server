@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+var jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const port = process.env.PORT || 5000;
@@ -25,12 +26,22 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    const campCollection = client.db('medicoDB').collection('camps');
-    const reviewCollection = client.db('medicoDB').collection('reviews');
-    const userCollection = client.db('medicoDB').collection('users');
+
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const campCollection = client.db('medicoDB').collection('camps');
+    const reviewCollection = client.db('medicoDB').collection('reviews');
+    const userCollection = client.db('medicoDB').collection('users');
+
+    // jwt 
+    app.post('/jwt',async(req,res)=>{
+      const user = req.body;
+      const token = jwt.sign(user,process.env.ACCESS_TOKEN,{
+        expiresIn: '2h'
+      })
+      res.send({token})
+    })
 
     // camps 
     app.get('/camps',async(req,res)=>{

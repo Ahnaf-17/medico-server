@@ -107,7 +107,11 @@ async function run() {
       res.send(result)
     })
 
-    // app.get('/camps/')
+    app.post('/camps',verifyToken,verifyOrganizer,async(req,res)=>{
+      const item = req.body
+      const result = await campCollection.insertOne(item);
+      res.send(result)
+    })
 
     // reviews 
     app.get('/reviews',async(req,res)=>{
@@ -135,7 +139,7 @@ async function run() {
     })
 
 
-    app.get('/users/organizer/:email',verifyToken,async(req,res)=>{
+    app.get('/users/:email',verifyToken,async(req,res)=>{
       const email = req.params.email;
       if(email !== req.decoded.email){
         return res.send({message: 'Unauthorized access'})
@@ -146,7 +150,13 @@ async function run() {
       if(user){
         organizer = user?.role === 'organizer'
       }
-      res.send({organizer})
+      if(user){
+        professional = user?.role === 'professional'
+      }
+      if(user){
+        participant = user?.role === 'participant'
+      }
+      res.send({organizer,professional,participant})
     })
 
 

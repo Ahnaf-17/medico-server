@@ -39,7 +39,7 @@ async function run() {
 
     // verifyToken 
     const verifyToken = (req, res, next) => {
-      console.log('inside verify:',req.headers.authorization);
+      console.log('inside verify:', req.headers.authorization);
       if (!req.headers.authorization) {
         return res.status(401).send({ message: 'unauthorized access' });
       }
@@ -53,110 +53,138 @@ async function run() {
       })
     }
 
-    const verifyOrganizer = async (req,res,next)=>{
+    const verifyOrganizer = async (req, res, next) => {
       const email = req.decoded.email
-      const query = {email:email};
+      const query = { email: email };
       const user = await userCollection.findOne(query)
       const isOrganizer = user?.role === 'organizer'
-      if(!isOrganizer){
+      if (!isOrganizer) {
         return res.status(403).send({ message: 'forbidden access' })
       }
       next()
-    } 
-    const verifyParticipant = async (req,res,next)=>{
+    }
+    const verifyParticipant = async (req, res, next) => {
       const email = req.decoded.email
-      const query = {email:email};
+      const query = { email: email };
       const user = await userCollection.findOne(query)
-      const isParticipant= user?.role === 'participant'
-      if(!isParticipant){
+      const isParticipant = user?.role === 'participant'
+      if (!isParticipant) {
         return res.status(403).send({ message: 'forbidden access' })
       }
       next()
-    } 
-    const verifyProfessional = async (req,res,next)=>{
+    }
+    const verifyProfessional = async (req, res, next) => {
       const email = req.decoded.email
-      const query = {email:email};
+      const query = { email: email };
       const user = await userCollection.findOne(query)
       const isProfessional = user?.role === 'professional'
-      if(!isProfessional){
+      if (!isProfessional) {
         return res.status(403).send({ message: 'forbidden access' })
       }
       next()
-    } 
+    }
 
 
     // jwt 
-    app.post('/jwt',async(req,res)=>{
+    app.post('/jwt', async (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user,process.env.ACCESS_TOKEN,{
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
         expiresIn: '2h'
       })
-      res.send({token})
+      res.send({ token })
     })
 
     // camps 
-    app.get('/camps',async(req,res)=>{
-      
+    app.get('/camps', async (req, res) => {
       const result = await campCollection.find().toArray();
       res.send(result)
     })
-    app.delete('/camps/:id',async(req,res)=>{
+    app.get('/camps/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id:new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
+      const result = await campCollection.findOne(query)
+      res.send(result)
+    })
+    app.delete('/camps/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
       const result = await campCollection.deleteOne(query)
       res.send(result)
     })
 
-    app.post('/camps',verifyToken,verifyOrganizer,async(req,res)=>{
+    app.post('/camps', verifyToken, verifyOrganizer, async (req, res) => {
       const item = req.body
       const result = await campCollection.insertOne(item);
       res.send(result)
     })
 
+    app.patch('/camps/:id',async (req, res) => {
+      const item = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          campName: item.campName,
+          servicesProvided: item.servicesProvided,
+          healthcareProfessionals: item.healthcareProfessionals,
+          targetAudience: item.targetAudience,
+          location: item.location,
+          longDescription: item.longDescription,
+          dateAndTime: item.dateAndTime,
+          campFees: item.campFees,
+          image: item.image,
+        }
+      }
+      const result = await campCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
+
+
+
     // reviews 
-    app.get('/reviews',async(req,res)=>{
+    app.get('/reviews', async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result)
     })
 
-  
+
 
     //users
-    app.post('/users',async(req,res)=>{
+    app.post('/users', async (req, res) => {
       const user = req.body;
-      const query = {email: user.email}
+      const query = { email: user.email }
       const existUser = await userCollection.findOne(query);
-      if(existUser){
-        return res.send({message: 'user exist'})
+      if (existUser) {
+        return res.send({ message: 'user exist' })
       }
       const result = await userCollection.insertOne(user);
       res.send(result)
     })
 
-    app.get('/users',verifyToken,async(req,res)=>{
+    app.get('/users', verifyToken, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result)
     })
 
 
-    app.get('/users/:email',verifyToken,async(req,res)=>{
+    app.get('/users/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
-      if(email !== req.decoded.email){
-        return res.send({message: 'Unauthorized access'})
+      if (email !== req.decoded.email) {
+        return res.send({ message: 'Unauthorized access' })
       }
-      const query = {email:email}
+      const query = { email: email }
       const user = await userCollection.findOne(query)
       let organizer = false;
-      if(user){
+      if (user) {
         organizer = user?.role === 'organizer'
       }
-      if(user){
+      if (user) {
         professional = user?.role === 'professional'
       }
-      if(user){
+      if (user) {
         participant = user?.role === 'participant'
       }
-      res.send({organizer,professional,participant})
+      res.send({ organizer, professional, participant })
     })
 
 
@@ -174,9 +202,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('medico is running')
-  })
-  
-  app.listen(port, () => {
-    console.log(`Medico is running on port ${port}`);
-  })
+  res.send('medico is running')
+})
+
+app.listen(port, () => {
+  console.log(`Medico is running on port ${port}`);
+})

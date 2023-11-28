@@ -63,6 +63,26 @@ async function run() {
       }
       next()
     } 
+    const verifyParticipant = async (req,res,next)=>{
+      const email = req.decoded.email
+      const query = {email:email};
+      const user = await userCollection.findOne(query)
+      const isParticipant= user?.role === 'participant'
+      if(!isParticipant){
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      next()
+    } 
+    const verifyProfessional = async (req,res,next)=>{
+      const email = req.decoded.email
+      const query = {email:email};
+      const user = await userCollection.findOne(query)
+      const isProfessional = user?.role === 'professional'
+      if(!isProfessional){
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      next()
+    } 
 
 
     // jwt 

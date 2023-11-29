@@ -33,6 +33,7 @@ async function run() {
     const campCollection = client.db('medicoDB').collection('camps');
     const reviewCollection = client.db('medicoDB').collection('reviews');
     const userCollection = client.db('medicoDB').collection('users');
+    const regCampCollection = client.db('medicoDB').collection('regCamp');
 
 
 
@@ -140,12 +141,38 @@ async function run() {
     })
 
 
+    // reg camps 
+    app.post('/reg-camps',verifyToken,verifyParticipant, async (req, res) => {
+      const item = req.body
+      console.log('from backend', item);
+      const result = await regCampCollection.insertOne(item);
+      res.send(result)
+    })
+  //   app.post('/reg-camps/:campId', verifyToken,verifyParticipant, async (req, res) => {
+  //     const item = req.body;
+  //     const campId = req.params.campId;
+  //     const result = await regCampCollection.insertOne({ ...item, regCampId: campId });
+  //     res.send(result);
+  // });
+
+    app.get('/reg-camps/', async (req, res) => {
+      const result = await regCampCollection.find().toArray();
+      res.send(result)
+    })
+
+    app.get('/reg-camps/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await regCampCollection.findOne(query)
+      res.send(result)
+    })
 
     // reviews 
     app.get('/reviews', async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result)
     })
+
 
 
 
@@ -165,6 +192,33 @@ async function run() {
       const result = await userCollection.find().toArray();
       res.send(result)
     })
+
+    app.get('/getUsers/:email', async (req, res) => {
+      const email = req.params.email;
+      // console.log('email from backend',email);
+      const query = {email: email}
+      const result = await userCollection.findOne(query);
+      res.send(result)
+    })
+
+
+
+
+    app.patch('/users/:email',verifyToken,async (req, res) => {
+      const item = req.body;
+      const email = req.params.email;
+      const filter = { email: email }
+      const updateDoc = {
+        $set: {
+          name: item.name,
+          image: item.image,
+        }
+      }
+      const result = await userCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
+
+
 
 
     app.get('/users/:email', verifyToken, async (req, res) => {

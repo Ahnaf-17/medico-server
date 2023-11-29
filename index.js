@@ -100,12 +100,7 @@ async function run() {
       const result = await campCollection.find().toArray();
       res.send(result)
     })
-    app.get('/camps/:id', async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) }
-      const result = await campCollection.findOne(query)
-      res.send(result)
-    })
+
     app.delete('/camps/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
@@ -116,6 +111,12 @@ async function run() {
     app.post('/camps', verifyToken, verifyOrganizer, async (req, res) => {
       const item = req.body
       const result = await campCollection.insertOne(item);
+      res.send(result)
+    })
+    app.get('/camps/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await campCollection.findOne(query)
       res.send(result)
     })
 
@@ -139,6 +140,93 @@ async function run() {
       const result = await campCollection.updateOne(filter,updateDoc)
       res.send(result)
     })
+
+    // user 
+    app.patch('/users/:email',verifyToken,async (req, res) => {
+      const item = req.body;
+      const email = req.params.email;
+      const filter = { email: email }
+      const updateDoc = {
+        $set: {
+          name: item.name,
+          image: item.image,
+        }
+      }
+      const result = await userCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
+    // app.patch('/users/:email', verifyToken, async (req, res) => {
+    //   try {
+    //     const item = req.body;
+    //     const email = req.params.email;
+    //     const filter = { email: email };
+    //     const updateDoc = {
+    //       $set: {
+    //         name: item.name,
+    //         image: item.image,
+    //       }
+    //     };
+    
+    //     // Update the user document in the database
+    //     await userCollection.updateOne(filter, updateDoc);
+    
+    //     // Fetch the updated user document after the update
+    //     const updatedUser = await userCollection.findOne(filter);
+    
+    //     // Send back the updated user data in the response
+    //     res.status(200).json(updatedUser);
+    //   } catch (error) {
+    //     // Handle errors appropriately
+    //     res.status(500).json({ message: 'Error updating user data' });
+    //   }
+    // });
+    
+
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email }
+      const existUser = await userCollection.findOne(query);
+      if (existUser) {
+        return res.send({ message: 'user exist' })
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result)
+    })
+
+    app.get('/users', verifyToken, async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result)
+    })
+
+    app.get('/getUsers/:email', async (req, res) => {
+      const email = req.params.email;
+      // console.log('email from backend',email);
+      const query = {email: email}
+      const result = await userCollection.findOne(query);
+      res.send(result)
+    })
+
+
+    app.get('/users/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.send({ message: 'Unauthorized access' })
+      }
+      const query = { email: email }
+      const user = await userCollection.findOne(query)
+      let organizer = false;
+      if (user) {
+        organizer = user?.role === 'organizer'
+      }
+      if (user) {
+        professional = user?.role === 'professional'
+      }
+      if (user) {
+        participant = user?.role === 'participant'
+      }
+      res.send({ organizer, professional, participant })
+    })
+
 
 
     // reg camps 
@@ -177,69 +265,6 @@ async function run() {
 
 
     //users
-    app.post('/users', async (req, res) => {
-      const user = req.body;
-      const query = { email: user.email }
-      const existUser = await userCollection.findOne(query);
-      if (existUser) {
-        return res.send({ message: 'user exist' })
-      }
-      const result = await userCollection.insertOne(user);
-      res.send(result)
-    })
-
-    app.get('/users', verifyToken, async (req, res) => {
-      const result = await userCollection.find().toArray();
-      res.send(result)
-    })
-
-    app.get('/getUsers/:email', async (req, res) => {
-      const email = req.params.email;
-      // console.log('email from backend',email);
-      const query = {email: email}
-      const result = await userCollection.findOne(query);
-      res.send(result)
-    })
-
-
-
-
-    app.patch('/users/:email',verifyToken,async (req, res) => {
-      const item = req.body;
-      const email = req.params.email;
-      const filter = { email: email }
-      const updateDoc = {
-        $set: {
-          name: item.name,
-          image: item.image,
-        }
-      }
-      const result = await userCollection.updateOne(filter,updateDoc)
-      res.send(result)
-    })
-
-
-
-
-    app.get('/users/:email', verifyToken, async (req, res) => {
-      const email = req.params.email;
-      if (email !== req.decoded.email) {
-        return res.send({ message: 'Unauthorized access' })
-      }
-      const query = { email: email }
-      const user = await userCollection.findOne(query)
-      let organizer = false;
-      if (user) {
-        organizer = user?.role === 'organizer'
-      }
-      if (user) {
-        professional = user?.role === 'professional'
-      }
-      if (user) {
-        participant = user?.role === 'participant'
-      }
-      res.send({ organizer, professional, participant })
-    })
 
 
 

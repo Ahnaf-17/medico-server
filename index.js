@@ -29,7 +29,7 @@ async function run() {
   try {
 
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const campCollection = client.db('medicoDB').collection('camps');
     const reviewCollection = client.db('medicoDB').collection('reviews');
@@ -157,32 +157,8 @@ async function run() {
       const result = await userCollection.updateOne(filter,updateDoc)
       res.send(result)
     })
-    // app.patch('/users/:email', verifyToken, async (req, res) => {
-    //   try {
-    //     const item = req.body;
-    //     const email = req.params.email;
-    //     const filter = { email: email };
-    //     const updateDoc = {
-    //       $set: {
-    //         name: item.name,
-    //         image: item.image,
-    //       }
-    //     };
-    
-    //     // Update the user document in the database
-    //     await userCollection.updateOne(filter, updateDoc);
-    
-    //     // Fetch the updated user document after the update
-    //     const updatedUser = await userCollection.findOne(filter);
-    
-    //     // Send back the updated user data in the response
-    //     res.status(200).json(updatedUser);
-    //   } catch (error) {
-    //     // Handle errors appropriately
-    //     res.status(500).json({ message: 'Error updating user data' });
-    //   }
-    // });
-    
+
+
 
     app.post('/users', async (req, res) => {
       const user = req.body;
@@ -245,7 +221,7 @@ async function run() {
   //     res.send(result);
   // });
 
-    app.get('/reg-camps/', async (req, res) => {
+    app.get('/reg-camps/',verifyToken, async (req, res) => {
       const result = await regCampCollection.find().toArray();
       res.send(result)
     })
@@ -285,13 +261,21 @@ async function run() {
       const result = await paymentsCollection.insertOne(payment)
       res.send(result)
     })
+    app.get('/payments/:email', verifyToken, async (req, res) => {
+      const query = { email: req.params.email }
+      if (req.params.email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      const result = await paymentsCollection.find(query).toArray();
+      res.send(result);
+    })
 
 
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();

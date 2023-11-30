@@ -35,6 +35,7 @@ async function run() {
     const reviewCollection = client.db('medicoDB').collection('reviews');
     const userCollection = client.db('medicoDB').collection('users');
     const regCampCollection = client.db('medicoDB').collection('regCamp');
+    const paymentsCollection = client.db('medicoDB').collection('payments');
 
 
 
@@ -279,6 +280,11 @@ async function run() {
         clientSecret: paymentIntent.client_secret
       })
     });
+    app.post('/payments',async(req,res)=>{
+      const payment = req.body
+      const result = await paymentsCollection.insertOne(payment)
+      res.send(result)
+    })
 
 
 

@@ -36,6 +36,7 @@ async function run() {
     const userCollection = client.db('medicoDB').collection('users');
     const regCampCollection = client.db('medicoDB').collection('regCamp');
     const paymentsCollection = client.db('medicoDB').collection('payments');
+    const upcomingCampCollection = client.db('medicoDB').collection('upcomingCamp');
 
 
 
@@ -95,6 +96,22 @@ async function run() {
         expiresIn: '2h'
       })
       res.send({ token })
+    })
+
+    // upcoming camps 
+    app.get('/upcoming', async (req, res) => {
+      const result = await upcomingCampCollection.find().toArray();
+      res.send(result)
+    })
+    app.post('/upcoming', verifyToken, async (req, res) => {
+      const item = req.body
+      const result = await upcomingCampCollection.insertOne(item);
+      res.send(result)
+    })
+    app.post('/upcoming', verifyToken, verifyOrganizer, async (req, res) => {
+      const item = req.body
+      const result = await upcomingCampCollection.insertOne(item);
+      res.send(result)
     })
 
     // camps 
@@ -221,10 +238,23 @@ async function run() {
   //     res.send(result);
   // });
 
-    app.get('/reg-camps/',verifyToken, async (req, res) => {
+    app.get('/reg-camps',verifyToken,verifyParticipant, async (req, res) => {
       const result = await regCampCollection.find().toArray();
       res.send(result)
     })
+
+    app.delete('/reg-camps/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await regCampCollection.deleteOne(query);
+      res.send(result);
+    })
+
+
+
+
+
+
 
     // app.get('/reg-camps/:id', async (req, res) => {
     //   const id = req.params.id;
